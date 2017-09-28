@@ -7,6 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('ng-server:server');
 var http = require('http');
+var initialDB = require('../services/initial.service');
 
 /**
  * Get port from environment and store in Express.
@@ -25,8 +26,14 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-console.log('server start at port:', port);
+server.listen(port, () => {
+  initialDB()
+    .then(msg => {
+      console.log(msg);
+      console.log('服务器启动成功,运行端口为:', port)
+    .catch(console.error(err));
+  });
+});
 server.on('error', onError);
 server.on('listening', onListening);
 

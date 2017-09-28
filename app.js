@@ -5,11 +5,12 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+var jwt = require('express-jwt');
 
-var initialDB = require('./models/db').initialDB;
-
+var config = require('./config.json');
+var initialDB = require('./services/initial.service');
+var controllers = require('./controllers');
 var index = require('./routes/index');
-var api = require('./routes/api');
 
 var app = express();
 
@@ -28,8 +29,21 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(jwt({
+  secret: config.secret,
+  credentialsRequired: false,
+  getToken: function fromHeaderOrQuerystring (req) {
+    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        return req.headers.authorization.split(' ')[1];
+    } else if (req.query && req.query.token) {
+      return req.query.token;
+    }
+    return null;
+  }
+}).unless({ path: ['/user/login'] }));
+
 app.use('/', index);
-app.use('/api', api);
+app.use('/api', controllers);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
