@@ -20,7 +20,6 @@ function authenticate (req, res) {
   });
   result
     .then(userInfo => {
-      res.send
       if (_.isObject(userInfo)) {
         res.send(userInfo);
       } else if (_.isString(userInfo)){
@@ -30,7 +29,7 @@ function authenticate (req, res) {
         } else if (userInfo === '密码错误') {
           res.sendStatus(401).send(userInfo);
         } else {
-          res.send(400);
+          res.sendStatus(400);
         }
       }
     })
