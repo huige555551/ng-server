@@ -24,7 +24,6 @@ function authenticate (loginForm) {
     if (user) {
       if (user.password === password) {
         // 验证通过后返回的用户信息: _id, username, realname, role, token
-        // 生成token: jwt(payload, secretKey, [options, callback])
         let token = jwt.sign({ sub: user._id }, config.secret, { expiresIn: '7d' });
         deferred.resolve({
           _id: user._id,

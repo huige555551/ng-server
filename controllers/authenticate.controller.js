@@ -14,11 +14,10 @@ module.exports = router;
 function authenticate (req, res) {
   const username = req && req.body.username;
   const password = req && req.body.password;
-  const result = authService.authenticate({
+  authService.authenticate({
     username: username,
     password: password
-  });
-  result
+  })
     .then(userInfo => {
       if (_.isObject(userInfo)) {
         res.send(userInfo);
