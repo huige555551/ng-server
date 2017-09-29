@@ -22,7 +22,6 @@ function authenticate (req, res) {
       if (_.isObject(userInfo)) {
         res.send(userInfo);
       } else if (_.isString(userInfo)){
-        const authErr = userInfo;
         if (userInfo === '用户名不存在') {
           res.sendStatus(404).send(userInfo);
         } else if (userInfo === '密码错误') {
