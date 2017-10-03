@@ -14,11 +14,11 @@ service.updateChildrenArray = updateChildrenArray;
 service.editClassify = editClassify;
 service.getFirstCategories = getFirstCategories;
 service.getSecondCategories = getSecondCategories;
-
+service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray;
 module.exports = service;
 
 function updateChildrenArray (fatherId, childId) {
-  return Classify.findByIdAndUpdate(fatherId, {'$addToSet': {'children': childId}})
+  return Classify.findByIdAndUpdate(fatherId, {$addToSet: {children: childId}})
 }
 
 function getFirstCategories () {
@@ -30,7 +30,11 @@ function getSecondCategories () {
 }
 
 function editClassify (id, rowObj) {
-  return Classify.findByIdAndUpdate(id, rowObj)
+  return Classify.update({_id: rowObj.parentId}, {$pull: {children: rowObj._id}}).then(result => {
+    Classify.update({_id: id}, rowObj).then(result => {
+      Classify.update({_id: rowObj.parentId}, {$addToSet: {children: id}})
+    })
+  })
 }
 
 function getAll () {
@@ -52,28 +56,33 @@ function getAncestorId (parentId) {
 }
 
 function deleteClassify(id) {
-  return Classify.findByIdAndRemove(id)
+  return Classify.findByIdAndRemove(id).then(result => {
+    for (let i = 0, len = result.children.length; i < len; i++) {
+      deleteClassify(result.children[i])
+    }
+  })
 }
 
 function addClassify (rowObj) {
-  if (!rowObj.parentId) {
+  var item = new Classify({
+    name: rowObj.name,
+    level: 1,
+    order: rowObj.order,
+    showIndex: rowObj.showIndex
+  })
+  return item.save()
+}
+function addClassifyAndUpdateChildrenArray (rowObj) {
+  return Classify.findById(rowObj.parentId).then(result => {
     var item = new Classify({
       name: rowObj.name,
-      level: 1,
+      level: result.level + 1,
       order: rowObj.order,
+      parentId: result._id,
       showIndex: rowObj.showIndex
     })
-    return item.save()
-  } else {
-    return Classify.findById(rowObj.parentId).then(result => {
-      var item = new Classify({
-        name: rowObj.name,
-        level: result.level + 1,
-        parentId: rowObj.parentId,
-        order: rowObj.order,
-        showIndex: rowObj.showIndex
-      })
       return item.save()
-    })
-  }
+    }).then(result => {
+      return Classify.update({_id: result.parentId}, {$addToSet: {children: result._id}})
+  })
 }

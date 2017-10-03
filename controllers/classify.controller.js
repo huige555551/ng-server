@@ -98,10 +98,9 @@ function deleteClassify (req, res) {
 }
 
 function addClassify (req, res) {
-  classifyService.addClassify(req.body)
-    .then(result => {
-      if (result.parentId) {
-        classifyService.updateChildrenArray(result.parentId, result._id).then(father => {
+  if (!req.body.parentId) {
+    classifyService.addClassify(req.body)
+        .then(result => {
           res.json({
             status: {
               errCode: 200,
@@ -109,20 +108,21 @@ function addClassify (req, res) {
             }
           });
         })
-      } else {
-        res.json({
-          status: {
-            errCode: 200,
-            message: '新建成功'
-          }
-        });
-      }
-    }).catch(err => {
+        .catch(err =>
+          res.json({
+            status: {
+              errCode: 300,
+              message: err
+            }
+          }))
+  } else {
+    classifyService.addClassifyAndUpdateChildrenArray(req.body).then(result => {
       res.json({
         status: {
-          errCode: 300,
-          message: err
+          errCode: 200,
+          message: '新建成功'
         }
       });
-    });
+    })
+  }
 }
