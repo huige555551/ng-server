@@ -30,16 +30,10 @@ function getSecondCategories () {
 }
 
 function editClassify (id, rowObj) {
-  return  Classify.findById(rowObj._id).then(doc => {
-    let oldfather = doc.parentId
-    return oldfather
-  }).then(oldfather => {
-    var promiseArr = []
-    promiseArr[0] = Classify.findByIdAndUpdate(rowObj.parentId, {$addToSet: {children: rowObj._id}})
-    promiseArr[1] = Classify.findByIdAndUpdate(oldfather, {$pull: {children: rowObj._id}})
-    promiseArr[2] = Classify.findByIdAndUpdate(rowObj._id, rowObj)
-    return Promise.all(promiseArr)
-  })
+  return  Classify.findById(rowObj._id).then(doc => doc.parentId)
+      .then(oldfather => Classify.findByIdAndUpdate(oldfather, {$pull: {children: rowObj._id}}))
+      .then(doc => Classify.findByIdAndUpdate(rowObj.parentId, {$addToSet: {children: rowObj._id}}))
+      .then(doc => Classify.findByIdAndUpdate(rowObj._id, rowObj))
 }
 
 function getAll () {
