@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const userController = require('./user.controller');
 const authenticateController = require('./authenticate.controller');
 const classifyController = require('./classify.controller');
+const specificationController = require('./specification.controller');
 
 function verifyToken(req, res, next) {
   if (req.headers.token || req.query.token) {
@@ -28,6 +29,7 @@ function verifyToken(req, res, next) {
 
 router.use('/auth', authenticateController);
 router.use('/user', userController);
-router.use('/classify', classifyController);
+router.use('/product/classify', classifyController);
+router.use('/product/specification', specificationController);
 
 module.exports = router;

@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.use('/api', tools)
+app.use('/api', tools)
 app.use('/', index);
 // /api/auth/login
 app.use('/api', controllers);

@@ -7,7 +7,7 @@ mongoose.Promise = global.Promise;
 let service = {}
 
 service.getAll = getAll;
-service.addClassify = addClassify;
+service.addAttributes = addAttributes;
 service.deleteClassify = deleteClassify;
 service.getClassifyById = getClassifyById;
 service.updateChildrenArray = updateChildrenArray;
@@ -15,7 +15,6 @@ service.editClassify = editClassify;
 service.getFirstCategories = getFirstCategories;
 service.getSecondCategories = getSecondCategories;
 service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray;
-
 module.exports = service;
 
 function updateChildrenArray (fatherId, childId) {
@@ -31,21 +30,6 @@ function getSecondCategories () {
 }
 
 function editClassify (id, rowObj) {
-  if(!rowObj.parent) {
-    delete rowObj.parent
-  }
-  return Classify.findById(rowObj._id).populate({ path: 'parent' })
-      .then(oldfather => {
-        if (oldfather) {
-          return Classify.findByIdAndUpdate(oldfather.parent, {$pull: {children: rowObj._id}})
-        }
-      })
-      .then(doc => {
-        if (rowObj.parent) {
-          return Classify.findByIdAndUpdate(rowObj.parent, {$addToSet: {children: rowObj._id}})
-        }
-      })
-      .then(newParent => Classify.findByIdAndUpdate(rowObj._id, Object.assign(rowObj,{level: rowObj.parent ? newParent.level + 1 : 1})))
 }
 
 function getAll () {
@@ -77,26 +61,21 @@ function getClassifyById (id) {
   return Classify.findById(id)
 }
 
-function getAncestorId (parent) {
-  Classify.findById(parent).then(doc => {
-    return doc.parent
+function getAncestorId (parentId) {
+  Classify.findById(parentId).then(doc => {
+    return doc.parentId
   })
 }
 
 function deleteClassify(id) {
-  return Classify.findById(id)
-      .then(classify => Classify.findByIdAndUpdate(classify.parent, {$pull: {children: id}}))
-      .then(doc => {
-        console.log('doc', doc)
-        Classify.findByIdAndRemove(id).then(result => {
-          for (let i = 0, len = result.children.length; i < len; i++) {
-            deleteClassify(result.children[i])
-          }
-      })
+  return Classify.findByIdAndRemove(id).then(result => {
+    for (let i = 0, len = result.children.length; i < len; i++) {
+      deleteClassify(result.children[i])
+    }
   })
 }
 
-function addClassify (rowObj) {
+function addAttributes (rowObj) {
   var item = new Classify({
     name: rowObj.name,
     level: 1,
@@ -105,18 +84,17 @@ function addClassify (rowObj) {
   })
   return item.save()
 }
-
 function addClassifyAndUpdateChildrenArray (rowObj) {
-  return Classify.findById(rowObj.parent).then(result => {
+  return Classify.findById(rowObj.parentId).then(result => {
     var item = new Classify({
       name: rowObj.name,
       level: result.level + 1,
       order: rowObj.order,
-      parent: result._id,
+      parentId: result._id,
       showIndex: rowObj.showIndex
     })
       return item.save()
     }).then(result => {
-      return Classify.findByIdAndUpdate(result.parent, {$addToSet: {children: result._id}})
+      return Classify.findByIdAndUpdate(result.parentId, {$addToSet: {children: result._id}})
   })
 }

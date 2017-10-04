@@ -17,8 +17,9 @@ var ClassifySchema = new Schema({
     type: Number,
     required: true
   },
-  parentId: {
-    type: Schema.Types.ObjectId
+  parent: {
+    type: Schema.Types.ObjectId,
+    ref: 'Classify'
   },
   showIndex: {
     type: Boolean,
