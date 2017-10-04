@@ -57,10 +57,11 @@ function getAll (req, res) {
         data: classify
       })
     }).catch(err => {
+      console.dir(err)
       res.json({
         status: {
           errCode: 300,
-          message: err
+          message: new Error(err)
         }
       })
     })

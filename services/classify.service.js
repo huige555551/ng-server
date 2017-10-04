@@ -33,12 +33,32 @@ function editClassify (id, rowObj) {
   return  Classify.findById(rowObj._id).then(doc => doc.parentId)
       .then(oldfather => Classify.findByIdAndUpdate(oldfather, {$pull: {children: rowObj._id}}))
       .then(doc => Classify.findByIdAndUpdate(rowObj.parentId, {$addToSet: {children: rowObj._id}}))
-      .then(doc => Classify.findByIdAndUpdate(rowObj._id, rowObj))
+      .then(newParent => Classify.findByIdAndUpdate(rowObj._id, Object.assign(rowObj,{level: newParent.level + 1})))
 }
 
 function getAll () {
-  return Classify.find({parentId: {$exists: false}}).populate( {path: 'children',
-      populate: { path: 'children' }})
+  var promiseArr = []
+  promiseArr[0] = Classify.find({level: 1})
+  promiseArr[1] = Classify.find()
+  return Promise.all(promiseArr)
+      .then(([firstClassify, allClassify]) => {
+        for (let i = 0, len = firstClassify.length; i < len; i++) {
+          firstClassify[i].children = getClassifyChildrenDetail(firstClassify[i].children, allClassify)
+        }
+        return firstClassify
+      })
+}
+function getClassifyChildrenDetail(classifyChildren, allClassify) {
+  for (let i = 0, len = classifyChildren.length; i < len; i++) {
+    for (let j = 0, len = allClassify.length; j < len; j++) {
+      if (classifyChildren[i] == allClassify[j]._id.toString()) {
+        classifyChildren[i] = allClassify[j]
+        classifyChildren[i].children = getClassifyChildrenDetail(classifyChildren[i].children, allClassify)
+        break
+      }
+    }
+  }
+  return classifyChildren
 }
 
 function getClassifyById (id) {
