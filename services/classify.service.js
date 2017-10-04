@@ -30,19 +30,21 @@ function getSecondCategories () {
 }
 
 function editClassify (id, rowObj) {
-  return Classify.update({_id: rowObj.parentId}, {$pull: {children: rowObj._id}}).then(result => {
-    Classify.update({_id: id}, rowObj).then(result => {
-      Classify.update({_id: rowObj.parentId}, {$addToSet: {children: id}})
-    })
+  return  Classify.findById(rowObj._id).then(doc => {
+    let oldfather = doc.parentId
+    return oldfather
+  }).then(oldfather => {
+    var promiseArr = []
+    promiseArr[0] = Classify.findByIdAndUpdate(rowObj.parentId, {$addToSet: {children: rowObj._id}})
+    promiseArr[1] = Classify.findByIdAndUpdate(oldfather, {$pull: {children: rowObj._id}})
+    promiseArr[2] = Classify.findByIdAndUpdate(rowObj._id, rowObj)
+    return Promise.all(promiseArr)
   })
 }
 
 function getAll () {
-  return Classify.find({parentId: {$exists: false}}).populate({
-    path: 'children',
-    // Get friends of friends - populate the 'friends' array for every friend
-    populate: { path: 'children' }
-  })
+  return Classify.find({parentId: {$exists: false}}).populate( {path: 'children',
+      populate: { path: 'children' }})
 }
 
 function getClassifyById (id) {
@@ -83,6 +85,6 @@ function addClassifyAndUpdateChildrenArray (rowObj) {
     })
       return item.save()
     }).then(result => {
-      return Classify.update({_id: result.parentId}, {$addToSet: {children: result._id}})
+      return Classify.findByIdAndUpdate(result.parentId, {$addToSet: {children: result._id}})
   })
 }
