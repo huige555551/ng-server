@@ -29,7 +29,7 @@ var SpecificationSchema = new Schema({
   },
   update_at: Date,
   valueArray: {
-    type: [{type: Schema.Types.ObjectId,ref: 'attribution'}],
+    type: [{type: Schema.Types.ObjectId,ref: 'Attribution'}],
     default: []
   }
 });

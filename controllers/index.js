@@ -6,6 +6,8 @@ const userController = require('./user.controller');
 const authenticateController = require('./authenticate.controller');
 const classifyController = require('./classify.controller');
 const specificationController = require('./specification.controller');
+const picController = require('./pic-upload.controller')
+const productController = require('./product.controller')
 
 function verifyToken(req, res, next) {
   if (req.headers.token || req.query.token) {
@@ -31,5 +33,7 @@ router.use('/auth', authenticateController);
 router.use('/user', userController);
 router.use('/product/classify', classifyController);
 router.use('/product/specification', specificationController);
+router.use('/product', productController);
+router.use('/pic', picController)
 
 module.exports = router;

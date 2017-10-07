@@ -5,5 +5,10 @@
       "useMongoClient": true
     }
   },
-  "secret": "xiaopangzi"
+  "secret": "xiaopangzi",
+  "accessKey": "3lznBCXyJMU6kfVevsCC7mS0QgnH8EsrZIk9zgy8",
+  "secretKey": "l9ETypI36JIJhvavfeN_tWhx3nj3TEnMyC98p4t1",
+  "bucket": "wili-store",
+  "expiress": 7200,
+  "privateBucketDomain": "http://oxfl7rud1.bkt.clouddn.com"
 }

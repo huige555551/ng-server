@@ -26,7 +26,7 @@ var ClassifySchema = new Schema({
     required: true
   },
   children: {
-    type: [{type: Schema.Types.ObjectId,ref: 'Classify'}],
+    type: [{type: Schema.Types.ObjectId, ref: 'Classify'}],
     default: []
   }
 });

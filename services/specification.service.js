@@ -8,28 +8,39 @@ mongoose.Promise = global.Promise;
 let service = {}
 
 service.getAll = getAll;
-service.addSpecification = addSpecification;
-service.deleteClassify = deleteClassify;
-service.getClassifyById = getClassifyById;
+service.addRowObject = addRowObject;
+service.deleteRowObject = deleteRowObject;
+service.getRowObject = getRowObject;
+service.editRowObject = editRowObject;
+
 service.updateChildrenArray = updateChildrenArray;
-service.editClassify = editClassify;
 service.getFirstCategories = getFirstCategories;
 service.getSecondCategories = getSecondCategories;
 service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray;
 module.exports = service;
 
 function getAll () {
-  return Specification.find({})
+  return Specification.find({}).populate({ path: 'valueArray'})
 }
 
-function addSpecification (rowObj) {
+function addRowObject (rowObj) {
   let attributeDoc = JSON.parse(rowObj.valueArray)
   delete rowObj.valueArray
-  let specificationDoc = new Specification(rowObj)
+  let specificationDoc = new Specification(rowObj),
+      rowObjectId
   return specificationDoc.save()
       .then(specification => {
-        Attribute.insertMany(attributeDoc)
-      }).catch(err => console.log(err))
+        rowObjectId = specification._id
+        return Attribute.insertMany(attributeDoc)
+      })
+      .then(attrArray => {
+        let valueArray = []
+        for (let i = 0; i < attrArray.length; i++) {
+          valueArray.push(attrArray[i]._id)
+        }
+        return Specification.findByIdAndUpdate(rowObjectId, {$set: { valueArray: valueArray }})
+      })
+      .catch(err => console.log(err))
 }
 
 function updateChildrenArray (fatherId, childId) {
@@ -44,11 +55,33 @@ function getSecondCategories () {
   return Classify.find({'level': 2})
 }
 
-function editClassify (id, rowObj) {
-  return  Classify.findById(rowObj._id).then(doc => doc.parentId)
-      .then(oldfather => Classify.findByIdAndUpdate(oldfather, {$pull: {children: rowObj._id}}))
-      .then(doc => Classify.findByIdAndUpdate(rowObj.parentId, {$addToSet: {children: rowObj._id}}))
-      .then(newParent => Classify.findByIdAndUpdate(rowObj._id, Object.assign(rowObj,{level: newParent.level + 1})))
+function editRowObject (id, rowObj) {
+  let valueArray = JSON.parse(rowObj.valueArray),
+      promiseAttributeArr = [],
+      oldValueArray = []
+  for (let i = 0; i < valueArray.length; i++) {
+    if (valueArray[i]._id) {
+      oldValueArray.push(valueArray[i]._id)
+      promiseAttributeArr[i] = Attribute.findByIdAndUpdate(valueArray[i]._id, valueArray[i])
+    } else {
+      promiseAttributeArr[i] = Attribute.create(valueArray[i])
+    }
+  }
+  promiseAttributeArr.push(
+      Specification.findById(rowObj._id)
+        .then(specification => {
+          for (let i = 0, len = oldValueArray.length; i < len; i++) {
+            let index = specification.valueArray.indexOf(oldValueArray[i])
+            index === -1 ? '' : specification.valueArray.splice(index, 1)
+          }
+          return Attribute.remove({_id: specification.valueArray})
+        })
+  )
+  return Promise.all(promiseAttributeArr)
+      .then(attrs => {
+        let valueArray = attrs.map(attr => attr._id)
+        return Specification.findByIdAndUpdate(rowObj._id, {$set: Object.assign(rowObj, { valueArray:  valueArray})})
+      })
 }
 
 
@@ -65,8 +98,8 @@ function getClassifyChildrenDetail(classifyChildren, allClassify) {
   return classifyChildren
 }
 
-function getClassifyById (id) {
-  return Classify.findById(id)
+function getRowObject (id) {
+  return Specification.findById(id).populate({path: 'valueArray'})
 }
 
 function getAncestorId (parentId) {
@@ -75,11 +108,13 @@ function getAncestorId (parentId) {
   })
 }
 
-function deleteClassify(id) {
-  return Classify.findByIdAndRemove(id).then(result => {
-    for (let i = 0, len = result.children.length; i < len; i++) {
-      deleteClassify(result.children[i])
+function deleteRowObject(id) {
+  return Specification.findByIdAndRemove(id).then(removeObj => {
+    let promiseArr = []
+    for (let i = 0, len = removeObj.valueArray.length; i < len; i++) {
+        promiseArr[i] = Attribute.findByIdAndRemove(removeObj.valueArray[i])
     }
+    return Promise.all(promiseArr)
   })
 }
 
