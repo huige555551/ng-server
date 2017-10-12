@@ -25,7 +25,10 @@ var AttributionSchema = new Schema({
     type: Date,
     default: Date.now()
   },
-  update_at: Date
+  update_at: {
+    type: Date,
+    default: Date.now()
+  }
 });
 
 module.exports = mongoose.model('Attribution',AttributionSchema);

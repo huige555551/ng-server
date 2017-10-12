@@ -28,6 +28,14 @@ var ClassifySchema = new Schema({
   children: {
     type: [{type: Schema.Types.ObjectId, ref: 'Classify'}],
     default: []
+  },
+  create_at: {
+    type: Date,
+    default: Date.now()
+  },
+  update_at: {
+    type: Date,
+    default: Date.now()
   }
 });
 

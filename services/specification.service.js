@@ -1,13 +1,14 @@
 const config = require('../config.json');
 const mongoose = require('mongoose');
 const Specification = require('../models/specification.model');
-const Attribute = require('../models/attribute.model');
+const Attribute = require('../models/attribution.model');
 
 mongoose.Promise = global.Promise;
 
 let service = {}
 
 service.getAll = getAll;
+service.getList = getList;
 service.addRowObject = addRowObject;
 service.deleteRowObject = deleteRowObject;
 service.getRowObject = getRowObject;
@@ -19,6 +20,16 @@ service.getSecondCategories = getSecondCategories;
 service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray;
 module.exports = service;
 
+async function getList (query, perPage, page) {
+  let result = {}
+  result.pagingData = await Specification.find(query)
+                              .skip((page - 1) * perPage)
+                              .limit(perPage)
+                              .populate({ path: 'valueArray'})
+  result.total = await Specification.count({})
+  result.page = page
+  return result
+}
 function getAll () {
   return Specification.find({}).populate({ path: 'valueArray'})
 }
@@ -40,7 +51,6 @@ function addRowObject (rowObj) {
         }
         return Specification.findByIdAndUpdate(rowObjectId, {$set: { valueArray: valueArray }})
       })
-      .catch(err => console.log(err))
 }
 
 function updateChildrenArray (fatherId, childId) {

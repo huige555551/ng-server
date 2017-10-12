@@ -7,6 +7,7 @@ const attributeService = require('../services/attribute.service');
 // routes
 router.post('/add', addRowObject);
 router.get('/all', getAll);
+router.get('/list', getList);
 router.delete('/delete/:id', deleteRowObject);
 router.get('/:id', getRowObject);
 router.put('/edit/:id', editRowObject);
@@ -15,17 +16,25 @@ router.put('/edit/:id', editRowObject);
 module.exports = router;
 
 // middlewares
+
+async function getList (req, res) {
+  let perPage = parseInt(req.query.perPage),
+      page = parseInt(req.query.page)
+  try {
+    for (let key in req.query) {
+      if (!req.query[key] || key === 'perPage' || key === 'page') {
+        delete req.query[key]
+      }
+    }
+    res.tools.setJson(200, '获取成功', await specificationService.getList(req.query, perPage, page))
+  } catch (err) {
+    res.tools.setJson(400, err, '')
+  }
+}
 function editRowObject (req, res) {
-  specificationService.editRowObject(req.params.id, req.body).then(result => {
-    console.log('result', result)
-    res.json({
-      status: {
-        errCode: 200,
-        message: '编辑成功'
-      },
-      data: result
-    })
-  })
+  specificationService.editRowObject(req.params.id, req.body)
+      .then(result => res.tools.setJson(200, '编辑成功', result))
+      .catch(err => res.tools.setJson(400, err, ''))
 }
 
 function getAll (req, res) {
@@ -34,23 +43,10 @@ function getAll (req, res) {
       .catch(err => res.tools.setJson(400, err, ''))
 }
 
-
 function getRowObject (req, res) {
-  specificationService.getRowObject(req.params.id).then(result => {
-    res.json({
-      status: {
-        errCode: 200
-      },
-      data: result
-    })
-  }).catch(err => {
-    res.json({
-      status: {
-        errCode: 300,
-        message: '获取失败'
-      }
-    })
-  })
+  specificationService.getRowObject(req.params.id)
+      .then(result => res.tools.setJson(200, '获取成功', result))
+      .catch(err => res.tools.setJson(400, err, ''))
 }
 
 function deleteRowObject (req, res) {
@@ -61,20 +57,6 @@ function deleteRowObject (req, res) {
 
 function addRowObject (req, res) {
   specificationService.addRowObject(req.body)
-      .then(result => {
-        res.json({
-          status: {
-            errCode: 200,
-            message: '新建成功'
-          },
-          data: result
-        });
-      })
-      .catch(err =>
-          res.json({
-            status: {
-              errCode: 300,
-              message: err
-            }
-          }))
+      .then(result => res.tools.setJson(200, '新建成功', result))
+      .catch(err => res.tools.setJson(400, err, ''))
 }

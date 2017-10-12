@@ -36,6 +36,7 @@ function getPrivateDownloadUrl (req, res) {
   var bucketManager = new qiniu.rs.BucketManager(mac, config);
   var deadline = parseInt(Date.now() / 1000) + 3600; // 1小时过期
   var privateDownloadUrl = bucketManager.privateDownloadUrl(privateBucketDomain, req.query.key, deadline);
+console.log(privateDownloadUrl)
   res.tools.setJson(200, '上传成功', { privateDownloadUrl: privateDownloadUrl})
 }
 

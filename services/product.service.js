@@ -1,12 +1,15 @@
 const config = require('../config.json');
 const mongoose = require('mongoose');
-const Classify = require('../models/classify.model');
-
+const Product = require('../models/product.model');
+const ProductAttr = require('../models/product_attr.model');
+const util = require('../common/util')
 mongoose.Promise = global.Promise;
 
 let service = {}
 
 service.getAll = getAll;
+service.searchName = searchName;
+service.getList = getList;
 service.editRowObject = editRowObject;
 service.addRowObject = addRowObject;
 service.deleteRowObject = deleteRowObject;
@@ -18,6 +21,26 @@ service.getSecondCategories = getSecondCategories;
 service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray;
 
 module.exports = service;
+async function searchName (req, name) {
+  let result = await Product.find({name: name})
+  return result
+}
+
+async function getList (query, perPage, page) {
+  let pagingData = await Product.find(query).skip(perPage*page).limit(perPage).sort({update_at: 'desc'})
+      total = await Product.count(query)
+  for (let i = 0, len = pagingData.length; i < len; i += 1) {
+    pagingData[i]._doc.stock = 0
+    pagingData[i]._doc.sales = 0
+    pagingData[i]._doc.cover = util.getPrivateDownloadUrl(pagingData[i].images[0], 'imageView2/2/w/200/h/100')
+    console.log(pagingData[i]._doc.cover)
+    for (let j = 0, len = pagingData[i].productAttrs.length; j < len; j += 1) {
+      pagingData[i]._doc.stock += pagingData[i].productAttrs[j].stock
+      pagingData[i]._doc.sales += pagingData[i].productAttrs[j].sales
+    }
+  }
+  return {pagingData, total, page: page + 1}
+}
 
 function updateChildrenArray (fatherId, childId) {
   return Classify.findByIdAndUpdate(fatherId, {$addToSet: {children: childId}})
@@ -31,35 +54,20 @@ function getSecondCategories () {
   return Classify.find({'level': 2})
 }
 
-function editRowObject (id, rowObj) {
-  if(!rowObj.parent) {
-    delete rowObj.parent
-  }
-  return Classify.findById(rowObj._id).populate({ path: 'parent' })
-      .then(oldfather => {
-        if (oldfather) {
-          return Classify.findByIdAndUpdate(oldfather.parent, {$pull: {children: rowObj._id}})
-        }
-      })
-      .then(doc => {
-        if (rowObj.parent) {
-          return Classify.findByIdAndUpdate(rowObj.parent, {$addToSet: {children: rowObj._id}})
-        }
-      })
-      .then(newParent => Classify.findByIdAndUpdate(rowObj._id, Object.assign(rowObj,{level: rowObj.parent ? newParent.level + 1 : 1})))
+async function addRowObject (rowObj) {
+  var productItem = new Product(rowObj)
+  return await productItem.save()
 }
 
-function getAll () {
-  var promiseArr = []
-  promiseArr[0] = Classify.find({level: 1})
-  promiseArr[1] = Classify.find()
-  return Promise.all(promiseArr)
-      .then(([firstClassify, allClassify]) => {
-        for (let i = 0, len = firstClassify.length; i < len; i++) {
-          firstClassify[i].children = getClassifyChildrenDetail(firstClassify[i].children, allClassify)
-        }
-        return firstClassify
-      })
+async function editRowObject (id, rowObj) {
+  rowObj.update_at = Date.now()
+  // 更新product
+  return await Product.findByIdAndUpdate(rowObj._id, rowObj)
+}
+
+async function getAll () {
+  const result = await Product.find()
+  return result
 }
 
 function getClassifyChildrenDetail(classifyChildren, allClassify) {
@@ -75,15 +83,21 @@ function getClassifyChildrenDetail(classifyChildren, allClassify) {
   return classifyChildren
 }
 
-function getRowObject (id) {
-  return Classify.findById(id)
+async function getRowObject (id) {
+  const product = await Product.findById(id)
+  product._doc.images = product._doc.images.map(image => {
+    return {
+      url: util.getPrivateDownloadUrl(image),
+      key: image
+    }
+  })
+  return product
 }
 
 function deleteRowObject(id) {
   return Classify.findById(id)
       .then(classify => Classify.findByIdAndUpdate(classify.parent, {$pull: {children: id}}))
       .then(doc => {
-        console.log('doc', doc)
         Classify.findByIdAndRemove(id).then(result => {
           for (let i = 0, len = result.children.length; i < len; i++) {
             deleteRowObject(result.children[i])
@@ -92,15 +106,7 @@ function deleteRowObject(id) {
   })
 }
 
-function addRowObject (rowObj) {
-  var item = new Classify({
-    name: rowObj.name,
-    level: 1,
-    order: rowObj.order,
-    showIndex: rowObj.showIndex
-  })
-  return item.save()
-}
+
 
 function addClassifyAndUpdateChildrenArray (rowObj) {
   return Classify.findById(rowObj.parent).then(result => {

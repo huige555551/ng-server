@@ -48,18 +48,13 @@ function editRowObject (id, rowObj) {
       })
       .then(newParent => Classify.findByIdAndUpdate(rowObj._id, Object.assign(rowObj,{level: rowObj.parent ? newParent.level + 1 : 1})))
 }
-
-function getAll () {
-  var promiseArr = []
-  promiseArr[0] = Classify.find({level: 1})
-  promiseArr[1] = Classify.find()
-  return Promise.all(promiseArr)
-      .then(([firstClassify, allClassify]) => {
-        for (let i = 0, len = firstClassify.length; i < len; i++) {
-          firstClassify[i].children = getClassifyChildrenDetail(firstClassify[i].children, allClassify)
-        }
-        return firstClassify
-      })
+async function getAll () {
+  const firstClassify = await Classify.find({level: 1})
+  const allClassify = await Classify.find()
+  for (let i = 0, len = firstClassify.length; i < len; i++) {
+    firstClassify[i].children = getClassifyChildrenDetail(firstClassify[i].children, allClassify)
+  }
+  return firstClassify
 }
 
 function getClassifyChildrenDetail(classifyChildren, allClassify) {

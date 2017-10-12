@@ -29,13 +29,16 @@ function getParent (req, res) {
 
 function editRowObject (req, res) {
   classifyService.editRowObject(req.params.id, req.body)
-    .then(classify => { res.tools.setJson(201, '编辑成功', classify)})
+    .then(classify => res.tools.setJson(201, '编辑成功', classify))
 }
 
-function getAll (req, res) {
-  classifyService.getAll()
-    .then(classify => { res.tools.setJson(200, '获取成功', classify) })
-      .catch(err => { res.tools.setJson(400, err, '') })
+async function getAll (req, res) {
+  try {
+    let classify = await classifyService.getAll()
+    res.tools.setJson(200, '获取成功', classify)
+  } catch (err) {
+    res.tools.setJson(400, err, '')
+  }
 }
 
 
