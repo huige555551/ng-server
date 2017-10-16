@@ -1,21 +1,21 @@
-const config = require('../config.json');
-const mongoose = require('mongoose');
-const FeaturedProduct = require('../models/featuredProduct.model');
-const Carousel = require('../models/carousel.model');
+const config = require('../config.json')
+const mongoose = require('mongoose')
+const FeaturedProduct = require('../models/featuredProduct.model')
+const Carousel = require('../models/carousel.model')
 const util = require('../common/util')
 
-mongoose.Promise = global.Promise;
+mongoose.Promise = global.Promise
 
 let service = {}
 
-service.getAll = getAll;
-service.getList = getList;
-service.editRowObject = editRowObject;
-service.addRowObject = addRowObject;
-service.deleteRowObject = deleteRowObject;
-service.getRowObject = getRowObject;
+service.getAll = getAll
+service.getList = getList
+service.editRowObject = editRowObject
+service.addRowObject = addRowObject
+service.deleteRowObject = deleteRowObject
+service.getRowObject = getRowObject
 
-module.exports = service;
+module.exports = service
 
 async function getList(query, perPage, page) {
   let result = {}

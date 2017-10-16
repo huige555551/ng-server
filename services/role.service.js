@@ -1,7 +1,6 @@
 const config = require('../config.json')
 const mongoose = require('mongoose')
-const Address = require('../models/address.model')
-const Classify = require('../models/classify.model')
+const Role = require('../models/role.model')
 
 mongoose.Promise = global.Promise
 
@@ -25,35 +24,24 @@ async function getList(query, perPage, page) {
 }
 
 async function editRowObject(id, rowObj) {
-  if (rowObj.defaultUse === 'true') {
-    await Address.updateMany({defaultUse: true}, {$set: {'defaultUse': false}})
-  }
-  const result = await Address.findByIdAndUpdate(id, Object.assign(rowObj, {update_at: Date.now()}))
+  const result = await Role.findByIdAndUpdate(id, Object.assign(rowObj, {update_at: Date.now()}))
   return result
 }
 
 async function getAll() {
-  const firstClassify = await Classify.find({level: 1})
-  const allClassify = await Classify.find()
-  for (let i = 0, len = firstClassify.length; i < len; i++) {
-    firstClassify[i].children = getClassifyChildrenDetail(firstClassify[i].children, allClassify)
-  }
-  return firstClassify
+  return await Role.find()
 }
 
 async function getRowObject(id) {
-  return await Address.findById(id)
+  return await Role.findById(id).populate({path: 'permissionList', select: '_id'})
 }
 
 async function deleteRowObject(id) {
-  return await Address.findByIdAndRemove(id)
+  return await Role.findByIdAndRemove(id)
 }
 
 async function addRowObject(rowObj) {
-  if (rowObj.defaultUse === 'true') {
-    await Address.updateMany({defaultUse: true}, {$set: {'defaultUse': false}})
-  }
-  var item = new Address(rowObj)
+  let item = new Role(rowObj)
   return await item.save()
 }
 

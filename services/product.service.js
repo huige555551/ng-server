@@ -1,34 +1,35 @@
-const config = require('../config.json');
-const mongoose = require('mongoose');
-const Product = require('../models/product.model');
-const ProductAttr = require('../models/product_attr.model');
+const config = require('../config.json')
+const mongoose = require('mongoose')
+const Product = require('../models/product.model')
+const ProductAttr = require('../models/product_attr.model')
 const util = require('../common/util')
-mongoose.Promise = global.Promise;
+mongoose.Promise = global.Promise
 
 let service = {}
 
-service.getAll = getAll;
-service.searchName = searchName;
-service.getList = getList;
-service.editRowObject = editRowObject;
-service.addRowObject = addRowObject;
-service.deleteRowObject = deleteRowObject;
-service.getRowObject = getRowObject;
+service.getAll = getAll
+service.searchName = searchName
+service.getList = getList
+service.editRowObject = editRowObject
+service.addRowObject = addRowObject
+service.deleteRowObject = deleteRowObject
+service.getRowObject = getRowObject
 
-service.updateChildrenArray = updateChildrenArray;
-service.getFirstCategories = getFirstCategories;
-service.getSecondCategories = getSecondCategories;
-service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray;
+service.updateChildrenArray = updateChildrenArray
+service.getFirstCategories = getFirstCategories
+service.getSecondCategories = getSecondCategories
+service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray
 
-module.exports = service;
-async function searchName (req, name) {
+module.exports = service
+
+async function searchName(req, name) {
   let result = await Product.find({name: name})
   return result
 }
 
-async function getList (query, perPage, page) {
-  let pagingData = await Product.find(query).skip(perPage*page).limit(perPage).sort({update_at: 'desc'})
-      total = await Product.count(query)
+async function getList(query, perPage, page) {
+  let pagingData = await Product.find(query).skip(perPage*page).limit(perPage).sort({update_at: 'desc'}),
+    total = await Product.count(query)
   for (let i = 0, len = pagingData.length; i < len; i += 1) {
     pagingData[i]._doc.stock = 0
     pagingData[i]._doc.sales = 0
@@ -42,30 +43,30 @@ async function getList (query, perPage, page) {
   return {pagingData, total, page: page + 1}
 }
 
-function updateChildrenArray (fatherId, childId) {
+function updateChildrenArray(fatherId, childId) {
   return Classify.findByIdAndUpdate(fatherId, {$addToSet: {children: childId}})
 }
 
-function getFirstCategories () {
+function getFirstCategories() {
   return Classify.find({'level': 1})
 }
 
-function getSecondCategories () {
+function getSecondCategories() {
   return Classify.find({'level': 2})
 }
 
-async function addRowObject (rowObj) {
+async function addRowObject(rowObj) {
   var productItem = new Product(rowObj)
   return await productItem.save()
 }
 
-async function editRowObject (id, rowObj) {
+async function editRowObject(id, rowObj) {
   rowObj.update_at = Date.now()
   // 更新product
   return await Product.findByIdAndUpdate(rowObj._id, rowObj)
 }
 
-async function getAll () {
+async function getAll() {
   const result = await Product.find()
   return result
 }
@@ -83,7 +84,7 @@ function getClassifyChildrenDetail(classifyChildren, allClassify) {
   return classifyChildren
 }
 
-async function getRowObject (id) {
+async function getRowObject(id) {
   const product = await Product.findById(id)
   product._doc.images = product._doc.images.map(image => {
     return {
@@ -108,7 +109,7 @@ function deleteRowObject(id) {
 
 
 
-function addClassifyAndUpdateChildrenArray (rowObj) {
+function addClassifyAndUpdateChildrenArray(rowObj) {
   return Classify.findById(rowObj.parent).then(result => {
     var item = new Classify({
       name: rowObj.name,
@@ -117,8 +118,8 @@ function addClassifyAndUpdateChildrenArray (rowObj) {
       parent: result._id,
       showIndex: rowObj.showIndex
     })
-      return item.save()
-    }).then(result => {
-      return Classify.findByIdAndUpdate(result.parent, {$addToSet: {children: result._id}})
+    return item.save()
+  }).then(result => {
+    return Classify.findByIdAndUpdate(result.parent, {$addToSet: {children: result._id}})
   })
 }

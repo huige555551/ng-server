@@ -1,19 +1,19 @@
-const express = require('express');
-const router = express.Router();
-const config = require('../config.json');
-const addressService = require('../services/address.service');
-const address = require("../models/address.model.js");
+const express = require('express')
+const router = express.Router()
+const config = require('../config.json')
+const addressService = require('../services/address.service')
+const address = require("../models/address.model.js")
 
 // routes
-router.post('/add', addRowObject);
-router.get('/all', getAll);
-router.get('/list', getList);
-router.delete('/delete/:id', deleteRowObject);
-router.get('/:id', getRowObject);
-router.put('/edit/:id', editRowObject);
+router.post('/add', addRowObject)
+router.get('/all', getAll)
+router.get('/list', getList)
+router.delete('/delete/:id', deleteRowObject)
+router.get('/:id', getRowObject)
+router.put('/edit/:id', editRowObject)
 
 
-module.exports = router;
+module.exports = router
 
 // middlewares
 async function editRowObject (req, res) {

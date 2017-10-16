@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const config = require('../config.json')
-const carousel = require('../services/carousel.service')
-const address = require("../models/carousel.model.js")
+const permissionService = require('../services/permission.service')
+const permission = require("../models/permission.model.js")
 
 // routes
 router.post('/add', addRowObject)
@@ -18,7 +18,7 @@ module.exports = router
 // middlewares
 async function editRowObject(req, res) {
   try {
-    const result = await carousel.editRowObject(req.params.id, req.body)
+    const result = await permissionService.editRowObject(req.params.id, req.body)
     res.tools.setJson(201, '编辑成功', result)
   } catch (err) {
     res.tools.setJson(400, err, '')
@@ -29,15 +29,15 @@ async function getList(req, res) {
   let perPage = parseInt(req.query.perPage),
     page = parseInt(req.query.page)
   try {
-    res.tools.setJson(200, '获取成功', await carousel.getList(req.query, perPage, page))
+    res.tools.setJson(200, '获取成功', await permissionService.getList(req.query, perPage, page))
   } catch (err) {
     res.tools.setJson(400, err, '')
   }
 }
 
-async function getAll(req, res) {
+async function getAll (req, res) {
   try {
-    let result = await carousel.getAll()
+    let result = await permissionService.getAll()
     res.tools.setJson(200, '获取成功', result)
   } catch (err) {
     res.tools.setJson(400, err, '')
@@ -47,7 +47,7 @@ async function getAll(req, res) {
 
 async function getRowObject(req, res) {
   try {
-    let result = await carousel.getRowObject(req.params.id)
+    let result = await permissionService.getRowObject(req.params.id)
     res.tools.setJson(200, '获取成功', result)
   } catch (err) {
     res.tools.setJson(400, err, '')
@@ -56,7 +56,7 @@ async function getRowObject(req, res) {
 
 async function deleteRowObject(req, res) {
   try {
-    let result = await carousel.deleteRowObject(req.params.id)
+    let result = await permissionService.deleteRowObject(req.params.id)
     res.tools.setJson(204, '删除成功', result)
   } catch (err) {
     res.tools.setJson(400, err, '')
@@ -65,7 +65,7 @@ async function deleteRowObject(req, res) {
 
 async function addRowObject(req, res) {
   try {
-    let result = await carousel.addRowObject(req.body)
+    let result = await permissionService.addRowObject(req.body)
     res.tools.setJson(201, '新建成功', result)
   } catch (err) {
     console.log(err)

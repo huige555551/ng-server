@@ -1,20 +1,20 @@
-const express = require('express');
-const router = express.Router();
-const config = require('../config.json');
-const productService = require('../services/product.service');
+const express = require('express')
+const router = express.Router()
+const config = require('../config.json')
+const productService = require('../services/product.service')
 
 // routes
-router.post('/add', addRowObject);
-router.get('/list', getList);
-router.get('/all', getAll);
-router.get('/searchName', searchName);
+router.post('/add', addRowObject)
+router.get('/list', getList)
+router.get('/all', getAll)
+router.get('/searchName', searchName)
 // router.delete('/delete/:id', deleteRowObject);
 // router.get('/listParent', getParent);
-router.get('/:id', getRowObject);
-router.put('/edit/:id', editRowObject);
+router.get('/:id', getRowObject)
+router.put('/edit/:id', editRowObject)
 //
 //
-module.exports = router;
+module.exports = router
 
 // middlewares
 async function searchName(req, res) {
@@ -26,10 +26,10 @@ async function searchName(req, res) {
   }
 }
 
-async function getList (req, res) {
+async function getList(req, res) {
   try {
-    let perPage = parseInt(req.query.perPage)
-        page = parseInt(req.query.page) - 1
+    let perPage = parseInt(req.query.perPage),
+      page = parseInt(req.query.page) - 1
     for (let key in req.query) {
       if (!req.query[key] || key === 'perPage' || key === 'page') {
         delete req.query[key]
@@ -40,19 +40,7 @@ async function getList (req, res) {
     res.tools.setJson(400, err, '')
   }
 }
-
-// function getParent (req, res) {
-//   classifyService.getFirstCategories().then(firstCategories => {
-//     classifyService.getSecondCategories().then(secondCategories => {
-//       res.tools.setJson(200, '查询成功', {
-//             firstCategories: firstCategories,
-//             secondCategories: secondCategories
-//           })
-//     })
-//   })
-// }
-//
-function editRowObject (req, res) {
+function editRowObject(req, res) {
   try {
     res.tools.setJson(201, '获取成功', productService.editRowObject(req.params.id, req.body))
   } catch (err) {
@@ -60,7 +48,7 @@ function editRowObject (req, res) {
   }
 }
 
-async function getAll (req, res) {
+async function getAll(req, res) {
   try {
     let result = await productService.getAll()
     res.tools.setJson(200, '获取成功', result)
@@ -70,9 +58,9 @@ async function getAll (req, res) {
 }
 
 
-async function getRowObject (req, res) {
+async function getRowObject(req, res) {
   try {
-    res.tools.setJson(200, '获取成功', productService.getRowObject(req.params.id))
+    res.tools.setJson(200, '获取成功', await productService.getRowObject(req.params.id))
   } catch (err) {
     res.tools.setJson(400, err, '')
   }
@@ -84,7 +72,7 @@ async function getRowObject (req, res) {
 //       .catch(err => res.tools.setJson(400, err, ''))
 // }
 
-async function addRowObject (req, res) {
+async function addRowObject(req, res) {
   try {
     res.tools.setJson(201, '新建成功', await productService.addRowObject(req.body))
   } catch (err) {

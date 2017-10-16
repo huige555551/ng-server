@@ -1,37 +1,37 @@
-const config = require('../config.json');
-const mongoose = require('mongoose');
-const Classify = require('../models/classify.model');
+const config = require('../config.json')
+const mongoose = require('mongoose')
+const Classify = require('../models/classify.model')
 
-mongoose.Promise = global.Promise;
+mongoose.Promise = global.Promise
 
 let service = {}
 
-service.getAll = getAll;
-service.editRowObject = editRowObject;
-service.addRowObject = addRowObject;
-service.deleteRowObject = deleteRowObject;
-service.getRowObject = getRowObject;
+service.getAll = getAll
+service.editRowObject = editRowObject
+service.addRowObject = addRowObject
+service.deleteRowObject = deleteRowObject
+service.getRowObject = getRowObject
 
-service.updateChildrenArray = updateChildrenArray;
-service.getFirstCategories = getFirstCategories;
-service.getSecondCategories = getSecondCategories;
-service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray;
+service.updateChildrenArray = updateChildrenArray
+service.getFirstCategories = getFirstCategories
+service.getSecondCategories = getSecondCategories
+service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray
 
-module.exports = service;
+module.exports = service
 
-function updateChildrenArray (fatherId, childId) {
+function updateChildrenArray(fatherId, childId) {
   return Classify.findByIdAndUpdate(fatherId, {$addToSet: {children: childId}})
 }
 
-function getFirstCategories () {
+function getFirstCategories() {
   return Classify.find({'level': 1})
 }
 
-function getSecondCategories () {
+function getSecondCategories() {
   return Classify.find({'level': 2})
 }
 
-function editRowObject (id, rowObj) {
+function editRowObject(id, rowObj) {
   if(!rowObj.parent) {
     delete rowObj.parent
   }
@@ -48,7 +48,7 @@ function editRowObject (id, rowObj) {
       })
       .then(newParent => Classify.findByIdAndUpdate(rowObj._id, Object.assign(rowObj,{level: rowObj.parent ? newParent.level + 1 : 1})))
 }
-async function getAll () {
+async function getAll() {
   const firstClassify = await Classify.find({level: 1})
   const allClassify = await Classify.find()
   for (let i = 0, len = firstClassify.length; i < len; i++) {
@@ -70,7 +70,7 @@ function getClassifyChildrenDetail(classifyChildren, allClassify) {
   return classifyChildren
 }
 
-function getRowObject (id) {
+function getRowObject(id) {
   return Classify.findById(id)
 }
 
@@ -87,7 +87,7 @@ function deleteRowObject(id) {
   })
 }
 
-function addRowObject (rowObj) {
+function addRowObject(rowObj) {
   var item = new Classify({
     name: rowObj.name,
     level: 1,
@@ -97,7 +97,7 @@ function addRowObject (rowObj) {
   return item.save()
 }
 
-function addClassifyAndUpdateChildrenArray (rowObj) {
+function addClassifyAndUpdateChildrenArray(rowObj) {
   return Classify.findById(rowObj.parent).then(result => {
     var item = new Classify({
       name: rowObj.name,
@@ -106,8 +106,8 @@ function addClassifyAndUpdateChildrenArray (rowObj) {
       parent: result._id,
       showIndex: rowObj.showIndex
     })
-      return item.save()
-    }).then(result => {
-      return Classify.findByIdAndUpdate(result.parent, {$addToSet: {children: result._id}})
+    return item.save()
+  }).then(result => {
+    return Classify.findByIdAndUpdate(result.parent, {$addToSet: {children: result._id}})
   })
 }

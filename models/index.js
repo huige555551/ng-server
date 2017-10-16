@@ -1,4 +1,4 @@
-const User = require('./user.model');
+const User = require('./admin.model.js');
 
 let models = {}
 

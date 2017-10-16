@@ -1,26 +1,26 @@
-const config = require('../config.json');
-const mongoose = require('mongoose');
-const Specification = require('../models/specification.model');
-const Attribute = require('../models/attribution.model');
+const config = require('../config.json')
+const mongoose = require('mongoose')
+const Specification = require('../models/specification.model')
+const Attribute = require('../models/attribution.model')
 
-mongoose.Promise = global.Promise;
+mongoose.Promise = global.Promise
 
 let service = {}
 
-service.getAll = getAll;
-service.getList = getList;
-service.addRowObject = addRowObject;
-service.deleteRowObject = deleteRowObject;
-service.getRowObject = getRowObject;
-service.editRowObject = editRowObject;
+service.getAll = getAll
+service.getList = getList
+service.addRowObject = addRowObject
+service.deleteRowObject = deleteRowObject
+service.getRowObject = getRowObject
+service.editRowObject = editRowObject
 
-service.updateChildrenArray = updateChildrenArray;
-service.getFirstCategories = getFirstCategories;
-service.getSecondCategories = getSecondCategories;
-service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray;
-module.exports = service;
+service.updateChildrenArray = updateChildrenArray
+service.getFirstCategories = getFirstCategories
+service.getSecondCategories = getSecondCategories
+service.addClassifyAndUpdateChildrenArray = addClassifyAndUpdateChildrenArray
+module.exports = service
 
-async function getList (query, perPage, page) {
+async function getList(query, perPage, page) {
   let result = {}
   result.pagingData = await Specification.find(query)
                               .skip((page - 1) * perPage)
@@ -30,15 +30,15 @@ async function getList (query, perPage, page) {
   result.page = page
   return result
 }
-function getAll () {
+function getAll() {
   return Specification.find({}).populate({ path: 'valueArray'})
 }
 
-function addRowObject (rowObj) {
+function addRowObject(rowObj) {
   let attributeDoc = JSON.parse(rowObj.valueArray)
   delete rowObj.valueArray
   let specificationDoc = new Specification(rowObj),
-      rowObjectId
+    rowObjectId
   return specificationDoc.save()
       .then(specification => {
         rowObjectId = specification._id
@@ -53,19 +53,19 @@ function addRowObject (rowObj) {
       })
 }
 
-function updateChildrenArray (fatherId, childId) {
+function updateChildrenArray(fatherId, childId) {
   return Classify.findByIdAndUpdate(fatherId, {$addToSet: {children: childId}})
 }
 
-function getFirstCategories () {
+function getFirstCategories() {
   return Classify.find({'level': 1})
 }
 
-function getSecondCategories () {
+function getSecondCategories() {
   return Classify.find({'level': 2})
 }
 
-function editRowObject (id, rowObj) {
+function editRowObject(id, rowObj) {
   let valueArray = JSON.parse(rowObj.valueArray),
       promiseAttributeArr = [],
       oldValueArray = []
@@ -108,11 +108,11 @@ function getClassifyChildrenDetail(classifyChildren, allClassify) {
   return classifyChildren
 }
 
-function getRowObject (id) {
+function getRowObject(id) {
   return Specification.findById(id).populate({path: 'valueArray'})
 }
 
-function getAncestorId (parentId) {
+function getAncestorId(parentId) {
   Classify.findById(parentId).then(doc => {
     return doc.parentId
   })
@@ -129,7 +129,7 @@ function deleteRowObject(id) {
 }
 
 
-function addClassifyAndUpdateChildrenArray (rowObj) {
+function addClassifyAndUpdateChildrenArray(rowObj) {
   return Classify.findById(rowObj.parentId).then(result => {
     var item = new Classify({
       name: rowObj.name,
@@ -138,8 +138,8 @@ function addClassifyAndUpdateChildrenArray (rowObj) {
       parentId: result._id,
       showIndex: rowObj.showIndex
     })
-      return item.save()
-    }).then(result => {
-      return Classify.findByIdAndUpdate(result.parentId, {$addToSet: {children: result._id}})
+    return item.save()
+  }).then(result => {
+    return Classify.findByIdAndUpdate(result.parentId, {$addToSet: {children: result._id}})
   })
 }
