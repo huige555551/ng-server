@@ -91,7 +91,7 @@ function editRowObject(id, rowObj) {
       .then(attrs => {
         let valueArray = attrs.map(attr => attr._id)
         return Specification.findByIdAndUpdate(rowObj._id, {$set: Object.assign(rowObj, { valueArray:  valueArray})})
-      })
+      }).catch(err => console.log(err))
 }
 
 
@@ -118,14 +118,11 @@ function getAncestorId(parentId) {
   })
 }
 
-function deleteRowObject(id) {
-  return Specification.findByIdAndRemove(id).then(removeObj => {
-    let promiseArr = []
-    for (let i = 0, len = removeObj.valueArray.length; i < len; i++) {
-        promiseArr[i] = Attribute.findByIdAndRemove(removeObj.valueArray[i])
-    }
-    return Promise.all(promiseArr)
-  })
+async function deleteRowObject(id) {
+  let removeObj = await Specification.findByIdAndRemove(id)
+  for (let i = 0, len = removeObj.valueArray.length; i < len; i++) {
+      await Attribute.findByIdAndRemove(removeObj.valueArray[i])
+  }
 }
 
 

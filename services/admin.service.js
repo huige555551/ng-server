@@ -1,7 +1,7 @@
 const config = require('../config.json')
 const mongoose = require('mongoose')
 const Admin = require('../models/admin.model.js')
-
+const md5 = require('md5')
 mongoose.Promise = global.Promise
 
 let service = {}
@@ -25,9 +25,7 @@ async function getList(query, perPage, page) {
 }
 
 async function editRowObject(id, rowObj) {
-  if (rowObj.defaultUse === 'true') {
-    await Admin.updateMany({defaultUse: true}, {$set: {'defaultUse': false}})
-  }
+  rowObj.password = md5(rowObj.password)
   const result = await Admin.findByIdAndUpdate(id, Object.assign(rowObj, {update_at: Date.now()}))
   return result
 }
@@ -50,9 +48,11 @@ async function deleteRowObject(id) {
 }
 
 async function addRowObject(rowObj) {
-  if (rowObj.defaultUse === 'true') {
-    await Admin.updateMany({defaultUse: true}, {$set: {'defaultUse': false}})
+  const admin = await Admin.findOne({username: rowObj.username})
+  if (admin) {
+    return '用户名已经存在'
   }
+  rowObj.password = md5(rowObj.password)
   var item = new Admin(rowObj)
   return await item.save()
 }

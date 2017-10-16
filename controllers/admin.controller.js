@@ -3,7 +3,7 @@ const router = express.Router()
 const jwt = require('jsonwebtoken')
 const config = require('../config.json')
 const adminService = require('../services/admin.service')
-
+const _ = require('lodash')
 // routes
 router.post('/add', addRowObject)
 router.get('/all', getAll)
@@ -66,7 +66,13 @@ async function deleteRowObject(req, res) {
 async function addRowObject(req, res) {
   try {
     let result = await adminService.addRowObject(req.body)
-    res.tools.setJson(201, '新建成功', result)
+    if (_.isString(result)) {
+      if (result === '用户名已经存在') {
+        res.tools.setJson(400, '用户名已经存在', '')
+      }
+    } else {
+      res.tools.setJson(201, '新建成功', result)
+    }
   } catch (err) {
     console.log(err)
     res.tools.setJson(400, err, '')

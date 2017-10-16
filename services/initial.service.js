@@ -79,7 +79,7 @@ async function initialDB() {
   //初始化权限
   for (let i = 0, len = permissionList.length; i < len; i++) {
     await Permission.update({ identification: permissionList[i].identification}, permissionList[i], {upsert: true})
-    let parent = await Permission.findOne({ identification: permissionList[i].identification }, {_id: 1})
+    let parent = await Permission.findOne({ identification: permissionList[i].identification })
     for (let j = 0, len2 = permissionList[i].sonAuthorityList.length; j < len2; j++) {
       await Permission.update({identification: permissionList[i].sonAuthorityList[j].identification}, Object.assign(permissionList[i].sonAuthorityList[j], {parentId: parent._doc._id}), {upsert: true})
     }
